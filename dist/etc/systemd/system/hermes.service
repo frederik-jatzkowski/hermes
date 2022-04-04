@@ -1,0 +1,11 @@
+[Unit]
+Description=Daemon process for the hermes gateway and load balancer.
+
+
+[Service]
+Type=simple
+ExecStart=/run/hermes/hermes
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
