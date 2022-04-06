@@ -2,12 +2,12 @@ package server
 
 import (
 	"crypto/tls"
-	"log"
+	"io"
 	"net"
 	"sync"
 	"time"
 
-	"fleo.software/infrastructure/hermes/logging/startup"
+	"fleo.software/infrastructure/hermes/logs"
 )
 
 const RETRY_INTERVAL = 5 * time.Second
@@ -18,21 +18,27 @@ type dial func(address *string) (net.Conn, error)
 type Server struct {
 	Address    *string      `xml:"raddress,attr"`
 	Secure     bool         `xml:"secure,attr"`
-	TCPAddress *net.TCPAddr `xml:"-"`
+	tcpAddress *net.TCPAddr `xml:"-"`
+	Ok         bool         `xml:"-"`
 	online     bool         `xml:"-"`
 	checkConn  *net.Conn    `xml:"-"`
 	mutex      sync.Mutex   `xml:"-"`
-	dial       dial
+	dial       dial         `xml:"-"`
 }
 
-func (s *Server) Init(collector *startup.ErrorCollector) {
+func (s *Server) Init() {
+	s.Ok = true // assume correct
 	// check for all fields to be present
 	if s.Address == nil {
-		collector.Error("Attribute 'address' of Server unspecified.")
+		logs.LaunchPrint("invalid server: missing remote address", "5101")
+		s.Ok = false // fatal
 	} else {
 		addr, err := net.ResolveTCPAddr("tcp", *s.Address)
-		collector.Append(err)
-		s.TCPAddress = addr
+		if err != nil {
+			logs.LaunchPrint(err, "5201")
+			s.Ok = false // fatal
+		}
+		s.tcpAddress = addr
 	}
 	// init dial function
 	if s.Secure {
@@ -44,8 +50,12 @@ func (s *Server) Init(collector *startup.ErrorCollector) {
 			return net.Dial("tcp", *address)
 		}
 	}
-	// init pool
-	go s.monitor()
+
+	if s.Ok {
+		go s.monitor() // monitor server
+	} else {
+		logs.BothPrint("invalid server: '"+*s.Address+"' could not start operating", "5001")
+	}
 }
 func (s *Server) CanHandle() bool {
 	s.mutex.Lock()
@@ -54,11 +64,12 @@ func (s *Server) CanHandle() bool {
 	return online
 }
 func (s *Server) Handle(clientConn *net.Conn) {
+	defer (*clientConn).Close()
 	serverConn, err := s.tryConn()
 	if err == nil {
-		go newPipe(clientConn, serverConn, s).start()
-	} else {
-		(*clientConn).Close()
+		defer (*serverConn).Close()
+		go io.Copy(*clientConn, *serverConn)
+		io.Copy(*serverConn, *clientConn)
 	}
 }
 
@@ -74,9 +85,9 @@ func (s *Server) monitor() {
 		// check state changes
 		if online != (err == nil) {
 			if online {
-				log.Printf("server '%v' went offline", *s.Address)
+				logs.ContinuousPrint("server '"+*s.Address+"' went offline", "5011")
 			} else {
-				log.Printf("server '%v' came online", *s.Address)
+				logs.ContinuousPrint("server '"+*s.Address+"' came online", "5010")
 			}
 		}
 		if err == nil {

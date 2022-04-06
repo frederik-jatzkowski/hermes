@@ -4,7 +4,7 @@ import (
 	"net"
 
 	"fleo.software/infrastructure/hermes/balancer/algorithms"
-	"fleo.software/infrastructure/hermes/logging/startup"
+	"fleo.software/infrastructure/hermes/logs"
 	"fleo.software/infrastructure/hermes/server"
 )
 
@@ -12,33 +12,36 @@ type LoadBalancer struct {
 	Servers   []server.Server              `xml:"Server"`
 	Algorithm *string                      `xml:"algorithm,attr"`
 	algorithm algorithms.BalancerAlgorithm `xml:"-"`
+	Ok        bool                         `xml:"-"`
 }
 
-func (lb *LoadBalancer) Init(collector *startup.ErrorCollector) {
-	// initialize balancing algorithm
-	if lb.Algorithm == nil {
-		algo := "RoundRobin"
-		lb.Algorithm = &algo
-	}
-	algo, err := algorithms.ResolveAlgorithm(lb.Algorithm, &lb.Servers)
-	if err == nil {
-		lb.algorithm = algo
+func (b *LoadBalancer) Init() {
+	b.Ok = true
+	// init algorithm
+	algo, err := algorithms.ResolveAlgorithm(b.Algorithm, &b.Servers)
+	if err != nil {
+		logs.LaunchPrint(err, "4101")
+		b.Ok = false
 	} else {
-		collector.Append(err)
+		b.algorithm = algo
 	}
-
 	// init servers
-	for i := 0; i < len(lb.Servers); i++ {
-		lb.Servers[i].Init(collector)
+	for i := 0; i < len(b.Servers); i++ {
+		b.Servers[i].Init()
+	}
+	if !b.Ok {
+		logs.BothPrint("invalid load balancer could not start operating", "4001")
 	}
 }
 
-func (lb *LoadBalancer) Handle(conn *net.Conn) bool {
-	s := lb.algorithm.Next()
-	if s != nil {
-		s.Handle(conn)
-		return true
+func (b *LoadBalancer) Handle(conn *net.Conn) bool {
+	if b.Ok {
+		s := b.algorithm.Next() // get next server
+		if s != nil {
+			s.Handle(conn)
+			return true
+		}
+		(*conn).Close()
 	}
-	(*conn).Close()
 	return false
 }

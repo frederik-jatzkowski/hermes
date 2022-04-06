@@ -3,63 +3,65 @@ package service
 import (
 	"crypto/tls"
 	"net"
-	"time"
 
 	"fleo.software/infrastructure/hermes/balancer"
-	"fleo.software/infrastructure/hermes/logging"
-	"fleo.software/infrastructure/hermes/logging/startup"
+	"fleo.software/infrastructure/hermes/certbot"
+	"fleo.software/infrastructure/hermes/logs"
 )
 
 type Service struct {
-	HostName         *string                `xml:"hostname,attr"`
-	Balancer         *balancer.LoadBalancer `xml:"LoadBalancer"`
-	KeyFile          *string                `xml:"keyfile,attr"`
-	CertFile         *string                `xml:"certfile,attr"`
-	cert             *tls.Certificate       `xml,"-"`
-	failedLogCounter *logging.LogCounter    `xml,"-"`
+	ServerName *string                `xml:"servername,attr"`
+	Balancer   *balancer.LoadBalancer `xml:"LoadBalancer"`
+	KeyFile    *string                `xml:"keyfile,attr"`
+	CertFile   *string                `xml:"certfile,attr"`
+	Ok         bool                   `xml:"-"`
+	cert       *tls.Certificate
 }
 
-func (s *Service) Init(collector *startup.ErrorCollector) {
+func (s *Service) Init() {
+	s.Ok = true // assert correct
 	// check for all fields to be present and initialize them
-	if s.HostName == nil {
-		collector.Error("No hostname for Service unspecified.")
+	if s.ServerName == nil {
+		logs.LaunchPrint("invalid service: missing server name", "3101")
+		s.Ok = false // fatal
 	}
 	if s.Balancer == nil {
-		collector.Error("No Balancer for Service specified.")
-	} else {
-		s.Balancer.Init(collector)
+		logs.LaunchPrint("invalid service: missing load balancer", "3201")
+		s.Ok = false // fatal
 	}
-	if s.KeyFile == nil {
-		collector.Error("No keyfile for Service specified.")
-	}
-	if s.CertFile == nil {
-		collector.Error("No certfile for Service specified.")
-	}
-	if s.CertFile != nil && s.KeyFile != nil {
-		// load cert if present
-		cert, err := tls.LoadX509KeyPair(*s.CertFile, *s.KeyFile)
+	if s.Ok {
+		cert, err := certbot.ObtainCertificate(*s.ServerName) // obtain certificate
 		if err != nil {
-			collector.Append(err)
+			logs.LaunchPrint(err, "3301")
+			s.Ok = false // fatal
 		} else {
-			s.cert = &cert
+			s.cert = cert
 		}
 	}
-	s.failedLogCounter = logging.NewLogCounter("service: '"+*s.HostName+"', failed: %v", time.Minute, false)
+	if !s.Ok {
+		logs.BothPrint("invalid service '"+*s.ServerName+"' could not start operating", "3001") // log invalid service
+	} else {
+		s.Balancer.Init()
+	}
 }
 
 func (s *Service) Handle(conn *net.Conn, tlsconn *tls.Conn) bool {
-	if (*tlsconn).ConnectionState().ServerName != *s.HostName {
-		return false
+	// check if it can handle
+	if s.Ok && (*tlsconn).ConnectionState().ServerName == *s.ServerName {
+		// hand over to balancer
+		if !s.Balancer.Handle(conn) {
+			logs.Enumerator("failed services").Add(*s.ServerName)
+		}
+		return true
 	}
-	if !s.Balancer.Handle(conn) {
-		s.failedLogCounter.Increment()
-	}
-	return true
+	return false
 }
 
 func (s *Service) HandleClientHelloInfo(chi *tls.ClientHelloInfo) *tls.Certificate {
-	if chi.ServerName == *s.HostName {
-		return s.cert
+	if s.Ok {
+		if chi.ServerName == *s.ServerName {
+			return s.cert // return this services cert, if ServerNames match
+		}
 	}
 	return nil
 }
