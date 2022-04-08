@@ -8,6 +8,7 @@ import (
 
 	"fleo.software/infrastructure/hermes/certbot"
 	"fleo.software/infrastructure/hermes/gateway"
+	"fleo.software/infrastructure/hermes/http"
 	"fleo.software/infrastructure/hermes/logs"
 )
 
@@ -25,22 +26,23 @@ func main() {
 
 type Config struct {
 	Gateways []gateway.Gateway `xml:"Gateway"`
-	Email    string            `xml:"email,attr"`
+	Email    *string           `xml:"email,attr"`
 	Ok       bool              `xml:"-"`
+	Redirect *bool             `xml:"https-to-https,attr"`
 }
 
 func ParseConfig() *Config {
 	cfg := &Config{
 		Ok: true,
 	} // create config
-	file, err := os.ReadFile("/etc/hermes/conf.xml") // read config file
+	file, err := os.ReadFile("/etc/hermes/config.xml") // read config file
 	if err != nil {
-		logs.LaunchPrint("could not find or read '/etc/hermes/conf.xml' file", "1101")
+		logs.LaunchPrint("could not find or read '/etc/hermes/config.xml' file", "1101")
 		cfg.Ok = false // fatal
 	} else {
 		err = xml.Unmarshal(file, cfg) // try to parse
 		if err != nil {
-			logs.LaunchPrint("syntax error in '/etc/hermes/conf.xml' file", "1201")
+			logs.LaunchPrint("syntax error in '/etc/hermes/config.xml' file", "1201")
 			cfg.Ok = false // fatal
 		}
 	}
@@ -48,11 +50,11 @@ func ParseConfig() *Config {
 }
 
 func (cfg *Config) Init() {
-	if cfg.Email == "" {
+	if cfg.Email == nil {
 		logs.LaunchPrint("invalid config: missing email", "1301")
 		cfg.Ok = false
 	} else {
-		certbot.SetEmail(cfg.Email)
+		certbot.SetEmail(*cfg.Email)
 	}
 	if !cfg.Ok {
 		logs.BothPrint("invalid config: hermes could not start operating", "1001")
@@ -60,6 +62,10 @@ func (cfg *Config) Init() {
 	}
 	for i := range cfg.Gateways {
 		cfg.Gateways[i].Init() // init all gateways
+	}
+	// start https redirect in case it is chosen
+	if cfg.Redirect == nil || *cfg.Redirect {
+		go http.ServeHTTPSRedirect()
 	}
 }
 

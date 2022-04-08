@@ -67,8 +67,12 @@ func (s *Server) Handle(clientConn *net.Conn) {
 	defer (*clientConn).Close()
 	serverConn, err := s.tryConn()
 	if err == nil {
-		defer (*serverConn).Close()
-		go io.Copy(*clientConn, *serverConn)
+		//defer (*serverConn).Close()
+		go func(){
+			defer (*serverConn).Close()
+			io.Copy(*clientConn, *serverConn)
+		}()
+		//go io.Copy(*clientConn, *serverConn)
 		io.Copy(*serverConn, *clientConn)
 	}
 }

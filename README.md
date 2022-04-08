@@ -23,11 +23,17 @@ A gateway for tls termination, load balancing and virtual hosting for tcp/tls ba
 
 ## Configuration Guide
 
+Note: After changes to the config file have been made, restart hermes using `sudo systemctl restart hermes` to apply changes.
 
-### Restart after changes to the configuration
+### Config
 
-After changes have been made, restart hermes using `sudo systemctl restart hermes`
+### Gateway
 
+### Service
+
+### LoadBalancer
+
+### Server
 
 ## Log Guide
 

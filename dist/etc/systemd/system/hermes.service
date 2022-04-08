@@ -4,7 +4,7 @@ Description=daemon process for the hermes gateway and load balancer
 
 [Service]
 Type=simple
-ExecStart=/opt/hermes/hermes.sh
+ExecStart=/opt/hermes/hermes
 Restart=on-failure
 
 [Install]
