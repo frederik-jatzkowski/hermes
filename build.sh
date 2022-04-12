@@ -5,6 +5,7 @@
 # array of ressources
 res=(
     "/opt/hermes/hermes"
+    "/opt/hermes/hermes.sh"
     "/etc/hermes/config.xml"
     "/var/log/hermes/launch.log"
     "/var/log/hermes/operation.log"

@@ -3,8 +3,8 @@ package gateway
 import (
 	"crypto/tls"
 	"errors"
-	"log"
 	"net"
+	"time"
 
 	"fleo.software/infrastructure/hermes/logs"
 	"fleo.software/infrastructure/hermes/service"
@@ -64,17 +64,27 @@ func (g *Gateway) Listen() {
 		logs.BothPrint("invalid gateway '"+*g.Address+"' could not start operating", "2301")
 		return // if listener fails, gateway cannot start
 	}
+	// wait := time.Millisecond
+	// balance := 0.0
 	for {
 		// accept forever
 		conn, err := l.Accept()
 		if err != nil {
-			log.Println(err) // log failures during accept
+			logs.Counter("failed to accept connections").Increment()
+			// logs.ContinuousPrint(err, "2501") // log failures during accept
+			// balance = math.Min(balance+1, 10)
+			// logs.ContinuousPrint("waiting: "+wait.String(), "wait")
+			continue
 		}
+		//  else {
+		// 	balance = math.Max(balance-1, 0)
+		// }
 		go func() {
 			// perform handshake to get ServerName and log failures
 			err := conn.(*tls.Conn).Handshake()
 			if err != nil {
-				logs.ContinuousPrint(err, "2401")
+				logs.Counter("failed handshakes").Increment()
+				// logs.ContinuousPrint("handshake failed: "+err.Error(), "2401")
 				conn.Close() // if handshake error, close connection
 				return
 			}
@@ -86,6 +96,9 @@ func (g *Gateway) Listen() {
 			// count connections
 			logs.Counter("inbound connections").Increment()
 		}()
-
+		// if balance > 0 {
+		// 	time.Sleep(time.Millisecond * time.Duration(balance))
+		// }
+		time.Sleep(time.Millisecond * 3)
 	}
 }

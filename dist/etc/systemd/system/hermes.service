@@ -4,8 +4,10 @@ Description=daemon process for the hermes gateway and load balancer
 
 [Service]
 Type=simple
-ExecStart=/opt/hermes/hermes
+ExecStart=/opt/hermes/hermes.sh
 Restart=on-failure
+LimitNOFILE=16000
+LimitNOFILESoft=16000
 
 [Install]
 WantedBy=multi-user.target
