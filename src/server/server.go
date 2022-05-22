@@ -17,7 +17,7 @@ type dial func(address *string) (net.Conn, error)
 
 type Server struct {
 	Address    *string      `xml:"raddress,attr"`
-	Secure     bool         `xml:"secure,attr"`
+	Secure     bool         `xml:"tls,attr"`
 	tcpAddress *net.TCPAddr `xml:"-"`
 	Ok         bool         `xml:"-"`
 	online     bool         `xml:"-"`
@@ -68,7 +68,7 @@ func (s *Server) Handle(clientConn *net.Conn) {
 	serverConn, err := s.tryConn()
 	if err == nil {
 		//defer (*serverConn).Close()
-		go func(){
+		go func() {
 			defer (*serverConn).Close()
 			io.Copy(*clientConn, *serverConn)
 		}()
