@@ -1,0 +1,23 @@
+{
+  "email": "myname@domain.ending",
+  "redirect": true,
+  "logLevel": "info",
+  "gateways": [
+    {
+      "address": "0.0.0.0:443",
+      "services": [
+        {
+          "hostName":"localhost",
+          "balancer": {
+            "algorithm":"RoundRobin",
+            "servers": [
+              {
+                  "address": "local_network_host:port"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

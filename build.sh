@@ -1,33 +1,13 @@
 #!/bin/bash
 
-# env GOOS=linux GOARCH=arm64 go build -o /run/hermes/hermes ./hermes.go
+# tell bash to exit on error
+set -e
 
-# array of ressources
-res=(
-    "/opt/hermes/hermes"
-    "/opt/hermes/hermes.sh"
-    "/etc/hermes/config.xml"
-    "/var/log/hermes/launch.log"
-    "/var/log/hermes/operation.log"
-    "/etc/systemd/system/hermes.service"
-    "/etc/letsencrypt/renewal-hooks/post/hermes_start.sh"
-    "/etc/letsencrypt/renewal-hooks/pre/hermes_stop.sh"
-)
-arch=amd64 # build arm64
-cd src
-if env GOOS=linux GOARCH=$arch go build -o ../dist/opt/hermes/hermes ./hermes.go ; then
-    cd ../dist
-    sudo cp -R ./etc ./opt ./var / # distribute ressources to absolute paths
-    sudo tar cvzfP ./hermes_linux_$arch.tar.gz ${res[*]} # archive all ressources
-    sudo rm -R ${res[*]} # cleanup of the ressources on absolute paths
-fi
-cd ..
-arch=arm64 # build arm64
-cd src
-if env GOOS=linux GOARCH=$arch go build -o ../dist/opt/hermes/hermes ./hermes.go ; then
-    cd ../dist
-    sudo cp -R ./etc ./opt ./var / # distribute ressources to absolute paths
-    sudo tar cvzfP ./hermes_linux_$arch.tar.gz ${res[*]} # archive all ressources
-    sudo rm -R ${res[*]} # cleanup of the ressources on absolute paths
-fi
-cd ..
+# disable bash history
+set +o history
+
+# setup of env-variables
+export $(grep -v '^#' .env | xargs)
+
+# build docker container
+docker build . -t hermes:latest
