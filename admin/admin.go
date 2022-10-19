@@ -81,7 +81,7 @@ func Start() {
 
 	// define endpoints
 	http.HandleFunc("/config", panel.handleConfig)
-	http.HandleFunc("/", panel.handleIndex)
+	http.Handle("/", http.FileServer(http.Dir("/opt/hermes/static")))
 
 	server := &http.Server{
 		Addr: ":441",

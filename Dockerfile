@@ -1,5 +1,7 @@
 # multi stage build
-FROM golang:1.18-alpine AS build
+
+# build hermes
+FROM golang:1.18-alpine AS build-go
 
 WORKDIR /src
 
@@ -11,12 +13,22 @@ COPY ./ ./
 
 RUN go build --ldflags="-X github.com/frederik-jatzkowski/hermes/params.Version=${HERMES_VERSION}" -o /out/
 
+# build admin panel
+FROM node:16.18.0-alpine AS build-node
+
+WORKDIR /app
+
+COPY ./admin/frontend ./
+
+RUN npm install && npm run build
+
 FROM alpine
 
 RUN apk add --no-cache certbot
 #RUN apt-get update && apt-get install certbot -y
 
-COPY --from=build /out/hermes /opt/hermes/hermes
+COPY --from=build-go /out/hermes /opt/hermes/hermes
+COPY --from=build-node /app/public /opt/hermes/static
 COPY ./configs.json /var/hermes/configs.json
 COPY ./hermes.log /var/hermes/hermes.log
 COPY ./localhost/* /etc/letsencrypt/live/localhost/
