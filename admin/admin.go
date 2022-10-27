@@ -1,8 +1,11 @@
 package admin
 
 import (
+	cryptoRand "crypto/rand"
 	"fmt"
 	"log"
+	"math/big"
+	mathRand "math/rand"
 	"net"
 	"net/http"
 	"sync"
@@ -81,6 +84,7 @@ func Start() {
 
 	// define endpoints
 	http.HandleFunc("/config", panel.handleConfig)
+	http.HandleFunc("/auth", panel.handleAuth)
 	http.Handle("/", http.FileServer(http.Dir("/opt/hermes/static")))
 
 	server := &http.Server{
@@ -91,10 +95,24 @@ func Start() {
 }
 
 func (admin *adminPanel) lock() {
+	// lock admin panel
 	admin.accessLock.Lock()
+
+	// prevent timing attacks
+	const MAX_WAIT = 256
+	wait, err := cryptoRand.Int(cryptoRand.Reader, big.NewInt(MAX_WAIT))
+	if err != nil {
+		wait = big.NewInt(int64(mathRand.Intn(MAX_WAIT)))
+	}
+	time.Sleep(time.Millisecond * time.Duration(wait.Int64()))
 }
 
 func (admin *adminPanel) unlock() {
-	time.Sleep(time.Second)
-	admin.accessLock.Unlock()
+	go func() {
+		// prevent brute force attacks
+		time.Sleep(time.Second)
+
+		// release admin panel after waiting period
+		admin.accessLock.Unlock()
+	}()
 }

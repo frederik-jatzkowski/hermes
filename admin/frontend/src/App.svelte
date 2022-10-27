@@ -1,30 +1,40 @@
 <script lang="ts">
-	export let name: string;
+  import Login from "./auth/Login.svelte";
+  import { authenticated } from "./auth/auth";
+  import Panel from "./panel/Panel.svelte";
 </script>
 
 <main>
-	<h1>Hello {name}!</h1>
-	<p>Visit the <a href="https://svelte.dev/tutorial">Svelte tutorial</a> to learn how to build Svelte apps.</p>
+  {#if !$authenticated}
+    <Login />
+  {:else}
+    <Panel />
+  {/if}
 </main>
 
 <style>
-	main {
-		text-align: center;
-		padding: 1em;
-		max-width: 240px;
-		margin: 0 auto;
-	}
+  main {
+    text-align: center;
+    padding: 1em;
+    max-width: 240px;
+    margin: 0 auto;
+    display: flex;
+    gap: 1em;
+    flex-wrap: wrap;
+  }
 
-	h1 {
-		color: #ff3e00;
-		text-transform: uppercase;
-		font-size: 4em;
-		font-weight: 100;
-	}
+  h1 {
+    color: #eee;
+    text-transform: uppercase;
+    text-align: left;
+    font-size: 3em;
+    font-weight: 100;
+    margin: 0;
+  }
 
-	@media (min-width: 640px) {
-		main {
-			max-width: none;
-		}
-	}
+  @media (min-width: 640px) {
+    main {
+      max-width: none;
+    }
+  }
 </style>
