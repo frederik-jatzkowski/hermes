@@ -78,9 +78,11 @@ func (server *Server) transmit(clientConn *net.Conn, serverConn *net.TCPConn) {
 	server.closeCopy(serverConn, *clientConn)
 
 	// remove connection from server
+	server.stopLock.RLock()
 	server.connsLock.Lock()
 	delete(server.conns, serverConn)
 	server.connsLock.Unlock()
+	server.stopLock.RUnlock()
 
 	// end of lifecycle
 	logs.Debug().Str(logs.Component, logs.Server).Str(logs.ServerAddress, server.address.String()).
@@ -146,7 +148,7 @@ func (server *Server) monitor() {
 }
 
 func (server *Server) Stop() {
-	logs.Info().Str(logs.Component, logs.Server).Str(logs.ServerAddress, server.address.String()).Msg("stopping server server")
+	logs.Info().Str(logs.Component, logs.Server).Str(logs.ServerAddress, server.address.String()).Msg("stopping server")
 
 	// prevent further connections to be handled
 	server.stopLock.Lock()
