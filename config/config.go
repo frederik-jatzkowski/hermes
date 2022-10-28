@@ -6,24 +6,9 @@ import (
 )
 
 type Config struct {
+	Unix     int64     `json:"unix"`
 	Gateways []Gateway `json:"gateways"`
 	Redirect bool      `json:"redirect"`
-	LogLevel string    `json:"logLevel"`
-}
-
-func ReadConfigFile() ([]byte, error) {
-	var (
-		data []byte
-		err  error
-	)
-
-	// read config file
-	data, err = osReadFile("/var/hermes/config.xml")
-	if err != nil {
-		return data, fmt.Errorf("could not read config file: %s", err)
-	}
-
-	return data, err
 }
 
 func NewConfig(data []byte) (Config, error) {
@@ -47,15 +32,17 @@ func NewConfig(data []byte) (Config, error) {
 	return config, err
 }
 
-func (config Config) validate() error {
+func (config *Config) validate() error {
 	var err error
 
 	// validate Gateways
-	for _, gateway := range config.Gateways {
+	for i, gateway := range config.Gateways {
 		err = gateway.validate()
 		if err != nil {
 			return fmt.Errorf("invalid gateway config: %s", err)
 		}
+		// reassign to save changes
+		config.Gateways[i] = gateway
 	}
 
 	return err

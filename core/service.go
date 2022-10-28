@@ -36,6 +36,8 @@ func (service *Service) Start() error {
 		err error
 	)
 
+	logs.Info().Str(logs.Component, logs.Gateway).Str(logs.HostName, service.hostName).Msg("starting service")
+
 	// obtain initial cert
 	cert, err := certbot.ObtainCertificate(service.hostName)
 	if err != nil {
@@ -48,6 +50,8 @@ func (service *Service) Start() error {
 
 	// start balancer
 	service.balancer.Start()
+
+	logs.Info().Str(logs.Component, logs.Gateway).Str(logs.HostName, service.hostName).Msg("successfully started service")
 
 	return err
 }
@@ -82,10 +86,17 @@ func (service *Service) reload() {
 }
 
 func (service *Service) Stop() {
+
+	logs.Info().Str(logs.Component, logs.Gateway).Str(logs.HostName, service.hostName).Msg("stopping service")
+
 	service.stopping <- true
 	<-service.stopped
 	close(service.stopping)
 	close(service.stopped)
+
+	service.balancer.Stop()
+
+	logs.Info().Str(logs.Component, logs.Gateway).Str(logs.HostName, service.hostName).Msg("successfully stopped service")
 }
 
 func (service *Service) Cert() *tls.Certificate {

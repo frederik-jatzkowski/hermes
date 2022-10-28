@@ -1,8 +1,9 @@
 <script lang="ts">
   export let heading: string;
+  export let maxWidth: number = 50;
 </script>
 
-<tile>
+<tile style={`max-width: ${maxWidth}%;`}>
   <h2>{heading}</h2>
   <slot />
 </tile>
@@ -11,6 +12,7 @@
   tile {
     display: flex;
     gap: 0.5em;
+    flex-grow: 1;
     flex-direction: column;
     background-color: #333;
     padding: 1em;
@@ -24,5 +26,10 @@
   }
   p {
     margin: 0;
+  }
+  @media only screen and (max-width: 100ch) {
+    tile {
+      max-width: none !important;
+    }
   }
 </style>

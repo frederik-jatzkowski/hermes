@@ -3,6 +3,8 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/frederik-jatzkowski/hermes/admin"
 	"github.com/frederik-jatzkowski/hermes/logs"
@@ -56,17 +58,27 @@ var rootCmd = &cobra.Command{
 	Short:   "Hermes is a level 4 reverse proxy and load balancer",
 	Version: params.Version,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var (
-			err error
-		)
-
 		// setup logger
 		logs.PrepareLogger(params.LogLevel)
 
 		// setup admin panel
-		admin.Start()
+		err := admin.Start()
+		if err != nil {
+			return err
+		}
 
-		return err
+		// wait for SIGTERM or SIGINT
+		signalChan := make(chan os.Signal, 1)
+		signal.Notify(signalChan, syscall.SIGTERM, syscall.SIGINT)
+		sig := <-signalChan
+
+		logs.Info().Str(logs.Component, logs.Cmd).Msgf("starting to shut down gracefully after receiving '%s'", sig.String())
+
+		admin.Stop()
+
+		logs.Info().Str(logs.Component, logs.Cmd).Msgf("successfully shut down gracefully")
+
+		return nil
 	},
 }
 

@@ -7,7 +7,7 @@ type LoadBalancer struct {
 	Algorithm string   `json:"algorithm"`
 }
 
-func (balancer LoadBalancer) validate() error {
+func (balancer *LoadBalancer) validate() error {
 	var err error
 
 	// validate Algorithm
@@ -16,11 +16,12 @@ func (balancer LoadBalancer) validate() error {
 	}
 
 	// validate Servers
-	for _, server := range balancer.Servers {
+	for i, server := range balancer.Servers {
 		err = server.validate()
 		if err != nil {
 			return fmt.Errorf("invalid server config: %s", err)
 		}
+		balancer.Servers[i] = server
 	}
 
 	return err

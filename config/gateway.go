@@ -11,7 +11,7 @@ type Gateway struct {
 	ResolvedAddress net.TCPAddr `json:"-"`
 }
 
-func (gateway Gateway) validate() error {
+func (gateway *Gateway) validate() error {
 	var (
 		resolvedAddress *net.TCPAddr
 		err             error
@@ -27,10 +27,14 @@ func (gateway Gateway) validate() error {
 	}
 	gateway.ResolvedAddress = *resolvedAddress
 
-	// certbot needs port 80
-	// port 80 should not be used over tls anyway, it is standard for unencrypted http
+	// certbot needs port 442
+	if resolvedAddress.Port == 442 {
+		return fmt.Errorf("port 442 is reserved for certbot")
+	}
+
+	// port 442 should not be used over tls anyway, it is standard for unencrypted http
 	if resolvedAddress.Port == 80 {
-		return fmt.Errorf("port 80 is reserved for certbot")
+		return fmt.Errorf("port 80 is reserved for http-to-https-redirects")
 	}
 
 	// the admin panel needs port 440
@@ -44,11 +48,12 @@ func (gateway Gateway) validate() error {
 	}
 
 	// validate Services
-	for _, service := range gateway.Services {
+	for i, service := range gateway.Services {
 		err = service.validate()
 		if err != nil {
 			return fmt.Errorf("invalid service config: %s", err)
 		}
+		gateway.Services[i] = service
 	}
 
 	return err

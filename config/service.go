@@ -7,7 +7,7 @@ type Service struct {
 	Balancer LoadBalancer `json:"balancer"`
 }
 
-func (service Service) validate() error {
+func (service *Service) validate() error {
 	var (
 		err error
 	)

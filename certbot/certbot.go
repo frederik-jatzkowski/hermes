@@ -55,7 +55,19 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	}
 
 	// if cert for hostname does not exist, obtain certificate from certbot
-	command := execCommand("certbot", "certonly", "--standalone", "-n", "--agree-tos", "-m", params.EmailAdress, "-d", hostName)
+	command := execCommand(
+		"certbot",
+		"certonly",
+		"--standalone",
+		"-n",
+		"--agree-tos",
+		"-m",
+		params.EmailAdress,
+		"-d",
+		hostName,
+		"--http-01-port",
+		"442",
+	)
 	_, err = command.Output()
 	if err != nil {
 		return cert, fmt.Errorf("certbot could not obtain new certificate: %s", err)

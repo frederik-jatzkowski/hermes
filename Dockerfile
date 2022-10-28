@@ -29,8 +29,7 @@ RUN apk add --no-cache certbot
 
 COPY --from=build-go /out/hermes /opt/hermes/hermes
 COPY --from=build-node /app/public /opt/hermes/static
-COPY ./configs.json /var/hermes/configs.json
-COPY ./hermes.log /var/hermes/hermes.log
+COPY ./init-config.json /var/hermes/configs/0
 COPY ./localhost/* /etc/letsencrypt/live/localhost/
 
 VOLUME [ "/var/hermes" ]

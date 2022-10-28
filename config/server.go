@@ -10,7 +10,7 @@ type Server struct {
 	ResolvedAddress net.TCPAddr `json:"-"`
 }
 
-func (server Server) validate() error {
+func (server *Server) validate() error {
 	var (
 		resolvedAddress *net.TCPAddr
 		err             error

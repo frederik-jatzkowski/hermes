@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	"github.com/frederik-jatzkowski/hermes/config"
+	"github.com/frederik-jatzkowski/hermes/logs"
 )
 
 type LoadBalancer interface {
@@ -69,13 +70,21 @@ func (balancer *roundRobinBalancer) Handle(conn *net.Conn) error {
 }
 
 func (balancer *roundRobinBalancer) Start() {
+	logs.Info().Str(logs.Component, logs.Balancer).Str(logs.Algorithm, "RoundRobin").Msg("starting load balancer")
+
 	for _, server := range balancer.servers {
 		server.Start()
 	}
+
+	logs.Info().Str(logs.Component, logs.Balancer).Str(logs.Algorithm, "RoundRobin").Msg("successfully started load balancer")
 }
 
 func (balancer *roundRobinBalancer) Stop() {
+	logs.Info().Str(logs.Component, logs.Balancer).Str(logs.Algorithm, "RoundRobin").Msg("stopping load balancer")
+
 	for _, server := range balancer.servers {
 		server.Stop()
 	}
+
+	logs.Info().Str(logs.Component, logs.Balancer).Str(logs.Algorithm, "RoundRobin").Msg("successfully stopped load balancer")
 }

@@ -14,3 +14,27 @@ docker run --env-file="./.env" --network="host" hermes
 docker run --network="host" hermes -e \${HERMES_EMAIL} -a \${HERMES_ADMIN_HOST} -l \${HERMES_LOG_LEVEL} -u \${HERMES_USER} -p \${HERMES_PASSWORD}
 docker run --network="host" hermes -e ${HERMES_EMAIL} -a ${HERMES_ADMIN_HOST} -l ${HERMES_LOG_LEVEL} -u ${HERMES_USER} -p ${HERMES_PASSWORD}
 ```
+
+```
+{
+  "redirect": true,
+  "gateways": [
+    {
+      "address": "0.0.0.0:443",
+      "services": [
+        {
+          "hostName":"localhost",
+          "balancer": {
+            "algorithm":"RoundRobin",
+            "servers": [
+              {
+                  "address": "local_network_host:port"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```

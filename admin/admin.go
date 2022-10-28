@@ -3,7 +3,6 @@ package admin
 import (
 	cryptoRand "crypto/rand"
 	"fmt"
-	"log"
 	"math/big"
 	mathRand "math/rand"
 	"net"
@@ -13,28 +12,66 @@ import (
 
 	"github.com/frederik-jatzkowski/hermes/config"
 	"github.com/frederik-jatzkowski/hermes/core"
+	"github.com/frederik-jatzkowski/hermes/logs"
 	"github.com/frederik-jatzkowski/hermes/params"
 )
 
 var panel *adminPanel
 
 type adminPanel struct {
-	tlsCore    *core.Core
+	core       *core.Core
+	sysCore    *core.Core
+	server     *http.Server
 	accessLock sync.Mutex
 }
 
-func Start() {
-	var (
-		adminConfig config.Config
-		err         error
-	)
+func Start() error {
+	var err error
 
-	// singleton
+	logs.Info().Str(logs.Component, logs.Admin).Msg("starting admin panel")
+
+	// singleton check
 	if panel != nil {
-		return
+		return fmt.Errorf("another admin panel already exists")
+	}
+	panel = &adminPanel{}
+
+	// start admin core
+	err = panel.startAdminCore()
+	if err != nil {
+		return fmt.Errorf("could not start admin core: %s", err)
 	}
 
-	adminConfig = config.Config{
+	// start admin server
+	go panel.serve()
+
+	// start system core
+	err = panel.startSysCore()
+	if err != nil {
+		logs.Error().Msgf("could not start system core on startup: %s", err)
+	}
+
+	logs.Info().Str(logs.Component, logs.Admin).Msg("successfully started admin panel")
+
+	return nil
+}
+
+func Stop() {
+	logs.Info().Str(logs.Component, logs.Admin).Msg("stopping admin panel")
+
+	panel.accessLock.Lock()
+	defer panel.accessLock.Unlock()
+
+	panel.server.Close()
+	panel.core.Stop()
+	panel.sysCore.Stop()
+
+	logs.Info().Str(logs.Component, logs.Admin).Msg("successfully stopped admin panel")
+}
+
+func (admin *adminPanel) startAdminCore() error {
+	// admin panel definition
+	adminConfig := config.Config{
 		Gateways: []config.Gateway{
 			{
 				ResolvedAddress: net.TCPAddr{Port: 440},
@@ -72,26 +109,50 @@ func Start() {
 		},
 	}
 
-	panel = &adminPanel{
-		tlsCore: core.NewCore(adminConfig),
-	}
+	// build core
+	admin.core = core.NewCore(adminConfig)
 
 	// start admin core
-	err = panel.tlsCore.Start()
+	return admin.core.Start()
+}
+
+func (admin *adminPanel) startSysCore() error {
+	// get active system config
+	configs, err := config.ConfigHistory()
 	if err != nil {
-		log.Fatal(fmt.Errorf("could not start admin panel: %s", err))
+		return fmt.Errorf("could not retrieve config history: %s", err)
+	}
+	if len(configs) == 0 {
+		return fmt.Errorf("config history is empty")
+	}
+	config := configs[len(configs)-1]
+
+	// build system from config
+	admin.sysCore = core.NewCore(config)
+
+	// start system from config
+	return admin.sysCore.Start()
+}
+
+func (admin *adminPanel) serve() {
+	// define server
+	panel.server = &http.Server{
+		Addr: "localhost:441",
 	}
 
 	// define endpoints
-	http.HandleFunc("/config", panel.handleConfig)
-	http.HandleFunc("/auth", panel.handleAuth)
+	http.HandleFunc("/config", panel.configEndpoint)
+	http.HandleFunc("/auth", panel.authEndpoint)
 	http.Handle("/", http.FileServer(http.Dir("/opt/hermes/static")))
 
-	server := &http.Server{
-		Addr: ":441",
+	// serve admin panel until server is actively closed
+	var err error
+	for err != http.ErrServerClosed {
+		err := admin.server.ListenAndServe()
+		if err != http.ErrServerClosed {
+			logs.Error().Msgf("admin panel server terminated unexpectedly: %s", err)
+		}
 	}
-
-	log.Fatal(server.ListenAndServe())
 }
 
 func (admin *adminPanel) lock() {

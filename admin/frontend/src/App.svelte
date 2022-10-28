@@ -1,35 +1,28 @@
 <script lang="ts">
   import Login from "./auth/Login.svelte";
   import { authenticated } from "./auth/auth";
-  import Panel from "./panel/Panel.svelte";
+  import ConfigPanel from "./config/ConfigPanel.svelte";
 </script>
 
 <main>
   {#if !$authenticated}
     <Login />
   {:else}
-    <Panel />
+    <ConfigPanel />
   {/if}
 </main>
 
 <style>
   main {
     text-align: center;
-    padding: 1em;
+    padding: 2rem;
     max-width: 240px;
     margin: 0 auto;
     display: flex;
-    gap: 1em;
+    gap: 2rem;
+    align-items: center;
+    justify-content: center;
     flex-wrap: wrap;
-  }
-
-  h1 {
-    color: #eee;
-    text-transform: uppercase;
-    text-align: left;
-    font-size: 3em;
-    font-weight: 100;
-    margin: 0;
   }
 
   @media (min-width: 640px) {

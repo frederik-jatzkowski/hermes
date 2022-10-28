@@ -34,6 +34,8 @@ func (gateway *Gateway) Start() error {
 		err      error
 	)
 
+	logs.Info().Str(logs.Component, logs.Gateway).Int(logs.Port, gateway.address.Port).Msg("starting gateway")
+
 	// create listener
 	listener, err = tls.Listen(
 		"tcp",
@@ -57,6 +59,8 @@ func (gateway *Gateway) Start() error {
 
 	// start listening
 	go gateway.listen()
+
+	logs.Info().Str(logs.Component, logs.Gateway).Int(logs.Port, gateway.address.Port).Msg("gateway successfully started")
 
 	return err
 }
@@ -106,9 +110,13 @@ func (gateway *Gateway) listen() {
 }
 
 func (gateway *Gateway) Stop() {
+	logs.Info().Str(logs.Component, logs.Gateway).Int(logs.Port, gateway.address.Port).Msg("stopping gateway")
+
 	gateway.listener.Close()
 
 	for _, service := range gateway.services {
 		service.Stop()
 	}
+
+	logs.Info().Str(logs.Component, logs.Gateway).Int(logs.Port, gateway.address.Port).Msg("successfully stopped gateway")
 }

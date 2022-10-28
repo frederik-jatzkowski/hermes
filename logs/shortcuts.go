@@ -8,11 +8,16 @@ const (
 	Balancer      = "balancer"
 	Service       = "service"
 	Gateway       = "gateway"
+	Core          = "core"
+	Admin         = "admin"
+	Redirect      = "redirect"
+	Cmd           = "cmd"
 	Port          = "port"
 	ServerAddress = "serverAddress"
 	ClientAddress = "clientAddress"
 	HostName      = "hostName"
 	Sni           = "sni"
+	Algorithm     = "algorithm"
 )
 
 func Trace() *zerolog.Event {
