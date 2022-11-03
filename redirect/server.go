@@ -5,9 +5,13 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"strings"
+	"sync"
 
 	"github.com/frederik-jatzkowski/hermes/logs"
 )
+
+var running bool
+var runningLock sync.Mutex
 
 type redirect struct{}
 
@@ -41,6 +45,13 @@ func (r *redirect) ServeHTTP(response http.ResponseWriter, request *http.Request
 var server http.Server
 
 func Start() {
+	runningLock.Lock()
+	defer runningLock.Unlock()
+
+	if running {
+		return
+	}
+
 	logs.Info().Str(logs.Component, logs.Redirect).Msg("starting redirect")
 
 	server.Close()
@@ -56,11 +67,22 @@ func Start() {
 			logs.Error().Str(logs.Component, logs.Redirect).Msgf("error while starting redirect: %s", err)
 		}
 	}()
+
+	running = true
 }
 func Stop() {
+	runningLock.Lock()
+	defer runningLock.Unlock()
+
+	if !running {
+		return
+	}
+
 	logs.Info().Str(logs.Component, logs.Redirect).Msg("stopping redirect")
 
 	server.Close()
 
 	logs.Info().Str(logs.Component, logs.Redirect).Msg("successfully stopped redirect")
+
+	running = false
 }
