@@ -25,7 +25,6 @@ RUN npm install && npm run build
 FROM alpine
 
 RUN apk add --no-cache certbot
-#RUN apt-get update && apt-get install certbot -y
 
 COPY --from=build-go /out/hermes /opt/hermes/hermes
 COPY --from=build-node /app/public /opt/hermes/static
@@ -33,6 +32,7 @@ COPY ./init-config.json /var/hermes/configs/0
 COPY ./localhost/* /etc/letsencrypt/live/localhost/
 
 VOLUME [ "/var/hermes" ]
+VOLUME [ "/etc/letsencrypt" ]
 
 #ENTRYPOINT /opt/hermes/hermes --version
 ENTRYPOINT [ "/opt/hermes/hermes" ]

@@ -11,4 +11,7 @@ export $(grep -v '^#' .env | xargs)
 
 # run container
 # docker run --network="host" --rm -v hermes:/var/hermes/ hermes -e ${HERMES_EMAIL} -l ${HERMES_LOG_LEVEL} -u ${HERMES_USER} -p ${HERMES_PASSWORD} #-a ${HERMES_ADMIN_HOST} 
-docker run --network host --rm --volume hermes:/var/hermes/ --env-file .env hermes
+docker run --rm --network host \ 
+    --volume hermes:/var/hermes/ \
+    --volume letsencrypt:/etc/letsencrypt \
+    --env-file .env hermes
