@@ -59,7 +59,6 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	command := execCommand(
 		"certbot",
 		"certonly",
-		"--test-cert",
 		"--standalone",
 		"-n",
 		"--agree-tos",
