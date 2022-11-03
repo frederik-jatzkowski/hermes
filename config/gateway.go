@@ -27,23 +27,18 @@ func (gateway *Gateway) validate() error {
 	}
 	gateway.ResolvedAddress = *resolvedAddress
 
-	// certbot needs port 442
-	if resolvedAddress.Port == 442 {
-		return fmt.Errorf("port 442 is reserved for certbot")
+	// certbot needs port 441
+	if resolvedAddress.Port == 441 {
+		return fmt.Errorf("port 441 is reserved for certbot")
 	}
 
-	// port 442 should not be used over tls anyway, it is standard for unencrypted http
+	// port 80 should not be used over tls anyway, it is standard for unencrypted http
 	if resolvedAddress.Port == 80 {
 		return fmt.Errorf("port 80 is reserved for http-to-https-redirects")
 	}
 
 	// the admin panel needs port 440
 	if resolvedAddress.Port == 440 {
-		return fmt.Errorf("port '%d' is reserved for the admin panel", resolvedAddress.Port)
-	}
-
-	// the admin panel needs port 441
-	if resolvedAddress.Port == 441 {
 		return fmt.Errorf("port '%d' is reserved for the admin panel", resolvedAddress.Port)
 	}
 

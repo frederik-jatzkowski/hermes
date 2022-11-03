@@ -2,14 +2,15 @@ package admin
 
 import (
 	cryptoRand "crypto/rand"
+	"crypto/tls"
 	"fmt"
 	"math/big"
 	mathRand "math/rand"
-	"net"
 	"net/http"
 	"sync"
 	"time"
 
+	"github.com/frederik-jatzkowski/hermes/certbot"
 	"github.com/frederik-jatzkowski/hermes/config"
 	"github.com/frederik-jatzkowski/hermes/core"
 	"github.com/frederik-jatzkowski/hermes/logs"
@@ -19,14 +20,15 @@ import (
 var panel *adminPanel
 
 type adminPanel struct {
-	core       *core.Core
 	sysCore    *core.Core
 	server     *http.Server
 	accessLock sync.Mutex
 }
 
 func Start() error {
-	var err error
+	var (
+		err error
+	)
 
 	logs.Info().Str(logs.Component, logs.Admin).Msg("starting admin panel")
 
@@ -36,10 +38,10 @@ func Start() error {
 	}
 	panel = &adminPanel{}
 
-	// start admin core
-	err = panel.startAdminCore()
+	// check retrieval of certificate for admin panel
+	_, err = certbot.ObtainCertificate(params.AdminHost)
 	if err != nil {
-		return fmt.Errorf("could not start admin core: %s", err)
+		return fmt.Errorf("failed to obtain certificate for admin panel: %s", err)
 	}
 
 	// start admin server
@@ -63,57 +65,10 @@ func Stop() {
 	defer panel.accessLock.Unlock()
 
 	panel.server.Close()
-	panel.core.Stop()
-	panel.sysCore.Stop()
 
 	logs.Info().Str(logs.Component, logs.Admin).Msg("successfully stopped admin panel")
-}
 
-func (admin *adminPanel) startAdminCore() error {
-	// admin panel definition
-	adminConfig := config.Config{
-		Gateways: []config.Gateway{
-			{
-				ResolvedAddress: net.TCPAddr{Port: 440},
-				Services: []config.Service{
-					{
-						HostName: params.AdminHost,
-						Balancer: config.LoadBalancer{
-							Algorithm: "RoundRobin",
-							Servers: []config.Server{
-								{
-									ResolvedAddress: net.TCPAddr{
-										Port: 441,
-										IP:   net.IPv4(127, 0, 0, 1),
-									},
-								},
-							},
-						},
-					},
-					{
-						HostName: "localhost",
-						Balancer: config.LoadBalancer{
-							Algorithm: "RoundRobin",
-							Servers: []config.Server{
-								{
-									ResolvedAddress: net.TCPAddr{
-										Port: 441,
-										IP:   net.IPv4(127, 0, 0, 1),
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	// build core
-	admin.core = core.NewCore(adminConfig)
-
-	// start admin core
-	return admin.core.Start()
+	panel.sysCore.Stop()
 }
 
 func (admin *adminPanel) startSysCore() error {
@@ -135,20 +90,40 @@ func (admin *adminPanel) startSysCore() error {
 }
 
 func (admin *adminPanel) serve() {
+	// define serveMux
+	mux := http.NewServeMux()
 	// define server
 	panel.server = &http.Server{
-		Addr: "localhost:441",
+		Addr:    ":440",
+		Handler: mux,
+		TLSConfig: &tls.Config{
+			GetCertificate: func(chi *tls.ClientHelloInfo) (*tls.Certificate, error) {
+				var (
+					err  error
+					cert tls.Certificate
+				)
+
+				cert, err = certbot.ObtainCertificate(params.AdminHost)
+				if err != nil {
+					logs.Error().Str(logs.Component, logs.Admin).Msgf("failed to obtain certificate for admin panel: %s", err)
+
+					return nil, err
+				}
+
+				return &cert, err
+			},
+		},
 	}
 
 	// define endpoints
-	http.HandleFunc("/config", panel.configEndpoint)
-	http.HandleFunc("/auth", panel.authEndpoint)
-	http.Handle("/", http.FileServer(http.Dir("/opt/hermes/static")))
+	mux.HandleFunc("/config", panel.configEndpoint)
+	mux.HandleFunc("/auth", panel.authEndpoint)
+	mux.Handle("/", http.FileServer(http.Dir("/opt/hermes/static")))
 
 	// serve admin panel until server is actively closed
 	var err error
 	for err != http.ErrServerClosed {
-		err := admin.server.ListenAndServe()
+		err := admin.server.ListenAndServeTLS("", "")
 		if err != http.ErrServerClosed {
 			logs.Error().Msgf("admin panel server terminated unexpectedly: %s", err)
 		}

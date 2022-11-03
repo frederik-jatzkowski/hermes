@@ -3,7 +3,6 @@ package core
 import (
 	"github.com/frederik-jatzkowski/hermes/config"
 	"github.com/frederik-jatzkowski/hermes/logs"
-	"github.com/frederik-jatzkowski/hermes/redirect"
 )
 
 type Core struct {
@@ -27,8 +26,6 @@ func (core *Core) Start() error {
 
 	logs.Info().Str(logs.Component, logs.Core).Msg("starting core")
 
-	redirect.Start()
-
 	for _, gateway := range core.gateways {
 		err = gateway.Start()
 		if err != nil {
@@ -45,8 +42,6 @@ func (core *Core) Start() error {
 
 func (core *Core) Stop() {
 	logs.Info().Str(logs.Component, logs.Core).Msg("stopping core")
-
-	redirect.Stop()
 
 	for _, gateway := range core.gateways {
 		gateway.Stop()

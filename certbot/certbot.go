@@ -68,7 +68,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 		"-d",
 		hostName,
 		"--http-01-port",
-		"442",
+		"441",
 	)
 	out, err = command.Output()
 	if err != nil {

@@ -16,10 +16,9 @@ var runningLock sync.Mutex
 type redirect struct{}
 
 func (r *redirect) ServeHTTP(response http.ResponseWriter, request *http.Request) {
-	// logs.Info().Str(logs.Component, logs.Redirect).Msgf("received request for url '%s' on port 80", request.URL.Path)
 	// proxy requests for /.well-known/* to certbot on port 442
 	if strings.HasPrefix(request.URL.Path, "/.well-known") || strings.HasPrefix(request.URL.Path, ".well-known") {
-		proxyUrl, err := url.Parse("http://localhost:442")
+		proxyUrl, err := url.Parse("http://localhost:441")
 		if err != nil {
 			logs.Error().Str(logs.Component, logs.Redirect).Msgf("could not resolve url for proxy: %s", err)
 

@@ -9,6 +9,7 @@ import (
 	"github.com/frederik-jatzkowski/hermes/admin"
 	"github.com/frederik-jatzkowski/hermes/logs"
 	"github.com/frederik-jatzkowski/hermes/params"
+	"github.com/frederik-jatzkowski/hermes/redirect"
 	"github.com/spf13/cobra"
 )
 
@@ -61,6 +62,9 @@ var rootCmd = &cobra.Command{
 		// setup logger
 		logs.PrepareLogger(params.LogLevel)
 
+		// setup redirect
+		redirect.Start()
+
 		// setup admin panel
 		err := admin.Start()
 		if err != nil {
@@ -74,7 +78,9 @@ var rootCmd = &cobra.Command{
 
 		logs.Info().Str(logs.Component, logs.Cmd).Msgf("starting to shut down gracefully after receiving '%s'", sig.String())
 
+		// shutting down running systems
 		admin.Stop()
+		redirect.Stop()
 
 		logs.Info().Str(logs.Component, logs.Cmd).Msgf("successfully shut down gracefully")
 
