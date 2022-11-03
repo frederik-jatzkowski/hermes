@@ -12,6 +12,7 @@ import (
 type redirect struct{}
 
 func (r *redirect) ServeHTTP(response http.ResponseWriter, request *http.Request) {
+	logs.Debug().Str(logs.Component, logs.Redirect).Msgf("received request for url '%s' on port 80", request.URL.Path)
 	// proxy requests for /.well-known/* to certbot on port 442
 	if strings.HasPrefix(request.URL.Path, "/.well-known") || strings.HasPrefix(request.URL.Path, ".well-known") {
 		proxyUrl, err := url.Parse("http://localhost:442")
