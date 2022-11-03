@@ -47,13 +47,13 @@ func Start() error {
 	// start admin server
 	go panel.serve()
 
+	logs.Info().Str(logs.Component, logs.Admin).Msg("successfully started admin panel")
+
 	// start system core
 	err = panel.startSysCore()
 	if err != nil {
 		logs.Error().Msgf("could not start system core on startup: %s", err)
 	}
-
-	logs.Info().Str(logs.Component, logs.Admin).Msg("successfully started admin panel")
 
 	return nil
 }
