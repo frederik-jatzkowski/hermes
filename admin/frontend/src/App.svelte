@@ -10,6 +10,9 @@
   {:else}
     <ConfigPanel />
   {/if}
+  <copy>
+    © Frederik L. Jatzkowski | 2021 - {new Date().getFullYear()}
+  </copy>
 </main>
 
 <style>
@@ -29,5 +32,12 @@
     main {
       max-width: none;
     }
+  }
+  copy {
+    position: absolute;
+    bottom: 0rem;
+    left: 0rem;
+    padding: 0.2rem;
+    background-color: #222;
   }
 </style>
