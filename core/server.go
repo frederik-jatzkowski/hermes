@@ -18,6 +18,7 @@ type Server struct {
 	healthLock sync.RWMutex
 	conns      map[*net.TCPConn]bool
 	connsLock  sync.Mutex
+	stop       bool
 	stopLock   sync.RWMutex // will be hold during the closing process to stop new connections being build
 }
 
@@ -25,6 +26,7 @@ func NewServer(config config.Server) *Server {
 	return &Server{
 		address: config.ResolvedAddress,
 		healthy: false,
+		stop:    false,
 		conns:   make(map[*net.TCPConn]bool),
 	}
 }
@@ -36,8 +38,9 @@ func (server *Server) Handle(clientConn *net.Conn) error {
 	)
 
 	// make sure, server is not beeing stopped right now
-	stopping := !server.stopLock.TryRLock()
-	if stopping {
+	server.stopLock.RLock()
+	defer server.stopLock.RUnlock()
+	if server.stop {
 		// if closing, close incoming
 		(*clientConn).Close()
 
@@ -49,7 +52,6 @@ func (server *Server) Handle(clientConn *net.Conn) error {
 	server.healthLock.RLock()
 	if !server.healthy {
 		server.healthLock.RUnlock()
-		server.stopLock.RUnlock()
 
 		return fmt.Errorf("server not available")
 	}
@@ -58,8 +60,6 @@ func (server *Server) Handle(clientConn *net.Conn) error {
 	// open connection
 	serverConn, err = net.DialTCP("tcp", nil, &server.address)
 	if err != nil {
-		server.stopLock.RUnlock()
-
 		return fmt.Errorf("error while connecting to server: %s", err)
 	}
 
@@ -116,13 +116,16 @@ func (server *Server) monitor() {
 	// check forever until server is being stopped
 	for {
 		// if stopping, seize monitoring
-		stopping := !server.stopLock.TryRLock()
-		if stopping {
+		server.stopLock.RLock()
+		if server.stop {
+			server.stopLock.RUnlock()
+
 			break
 		}
 
 		// try to connect
-		_, err = net.DialTCP("tcp", nil, &server.address)
+		dialer := net.Dialer{Timeout: time.Second * 2}
+		conn, err := dialer.Dial("tcp", server.address.String())
 		if err != nil {
 			// discover, that server is unavailable
 			server.healthLock.Lock()
@@ -132,6 +135,7 @@ func (server *Server) monitor() {
 			server.healthy = false
 			server.healthLock.Unlock()
 		} else {
+			conn.Close()
 			// discover, that server is available
 			server.healthLock.Lock()
 			if !server.healthy {
@@ -152,6 +156,7 @@ func (server *Server) Stop() {
 
 	// prevent further connections to be handled
 	server.stopLock.Lock()
+	server.stop = true
 
 	// close all existing connections
 	server.connsLock.Lock()
@@ -159,6 +164,7 @@ func (server *Server) Stop() {
 		conn.Close()
 	}
 	server.connsLock.Unlock()
+	server.stopLock.Unlock()
 
 	logs.Info().Str(logs.Component, logs.Server).Str(logs.ServerAddress, server.address.String()).Msg("successfully stopped server")
 }

@@ -4,6 +4,7 @@
   import type { ConfigType } from "./types";
   import Gateway from "./Gateway.svelte";
   import Button from "../util/Button.svelte";
+  import Message from "../util/Message.svelte";
   import { SUCCESS } from "../util/colors";
 
   export let config: ConfigType;
@@ -16,6 +17,11 @@
     config = config;
   }
 </script>
+
+<Message>
+  This configuration was originally applied on
+  {new Date(config.unix * 1000).toUTCString()}
+</Message>
 
 <Group>
   <Checkbox bind:checked={config.redirect} name="redirect">

@@ -46,16 +46,8 @@
     <Spinner>Loading configuration history...</Spinner>
   {:else if state == ConfigState.Edit}
     <Group>
-      {#if current > 0}
-        <Button on:click={() => current--}>
-          Previous ({new Date(history[current - 1].unix).toUTCString()})
-        </Button>
-      {/if}
-      {#if current < history.length - 1}
-        <Button on:click={() => current++}>
-          Next ({new Date(history[current + 1].unix).toUTCString()})
-        </Button>
-      {/if}
+      <Button on:click={() => (current = Math.max(0, current - 1))}>Previous</Button>
+      <Button on:click={() => (current = Math.min(history.length - 1, current + 1))}>Next</Button>
       <Button scheme={ERR} on:click={applyConfig}>Apply This Configuration</Button>
     </Group>
     <Config config={history[current]} />

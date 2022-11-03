@@ -13,44 +13,44 @@ import (
 )
 
 func init() {
-	rootCmd.Flags().StringVarP(
-		&params.AdminHost,
-		"admin",
-		"a",
-		"",
-		"Sets the host name of the admin panel is running on",
-	)
-	rootCmd.Flags().StringVarP(
-		&params.LogLevel,
-		"logLevel",
-		"l",
-		"info",
-		"Sets the minimum level for log output",
-	)
-	rootCmd.Flags().StringVarP(
-		&params.EmailAdress,
-		"email",
-		"e",
-		"",
-		"Sets the initial email address for obtaining certificates",
-	)
-	rootCmd.MarkFlagRequired("email")
-	rootCmd.Flags().StringVarP(
-		&params.User,
-		"user",
-		"u",
-		"",
-		"Sets the hermes admin user",
-	)
-	rootCmd.MarkFlagRequired("user")
-	rootCmd.Flags().StringVarP(
-		&params.Password,
-		"password",
-		"p",
-		"",
-		"Sets the hermes admin password",
-	)
-	rootCmd.MarkFlagRequired("password")
+	// rootCmd.Flags().StringVarP(
+	// 	&params.AdminHost,
+	// 	"admin",
+	// 	"a",
+	// 	"",
+	// 	"Sets the host name of the admin panel is running on",
+	// )
+	// rootCmd.Flags().StringVarP(
+	// 	&params.LogLevel,
+	// 	"logLevel",
+	// 	"l",
+	// 	"info",
+	// 	"Sets the minimum level for log output",
+	// )
+	// rootCmd.Flags().StringVarP(
+	// 	&params.EmailAdress,
+	// 	"email",
+	// 	"e",
+	// 	"",
+	// 	"Sets the initial email address for obtaining certificates",
+	// )
+	// rootCmd.MarkFlagRequired("email")
+	// rootCmd.Flags().StringVarP(
+	// 	&params.User,
+	// 	"user",
+	// 	"u",
+	// 	"",
+	// 	"Sets the hermes admin user",
+	// )
+	// rootCmd.MarkFlagRequired("user")
+	// rootCmd.Flags().StringVarP(
+	// 	&params.Password,
+	// 	"password",
+	// 	"p",
+	// 	"",
+	// 	"Sets the hermes admin password",
+	// )
+	// rootCmd.MarkFlagRequired("password")
 }
 
 var rootCmd = &cobra.Command{

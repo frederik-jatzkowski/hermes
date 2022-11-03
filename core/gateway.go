@@ -112,7 +112,9 @@ func (gateway *Gateway) listen() {
 func (gateway *Gateway) Stop() {
 	logs.Info().Str(logs.Component, logs.Gateway).Int(logs.Port, gateway.address.Port).Msg("stopping gateway")
 
-	gateway.listener.Close()
+	if gateway.listener != nil {
+		gateway.listener.Close()
+	}
 
 	for _, service := range gateway.services {
 		service.Stop()
