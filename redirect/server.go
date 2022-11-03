@@ -46,6 +46,7 @@ func Start() {
 	server.Close()
 
 	server = http.Server{
+		Addr:    ":80",
 		Handler: &redirect{},
 	}
 
