@@ -4,6 +4,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/fs"
+	"os"
 	"strings"
 
 	"github.com/frederik-jatzkowski/hermes/params"
@@ -38,7 +39,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	var (
 		cert tls.Certificate
 		err  error
-		// out  []byte
+		out  []byte
 	)
 
 	if hostName == "" {
@@ -69,10 +70,11 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 		"--http-01-port",
 		"442",
 	)
-	_, err = command.Output()
-	// if err != nil {
-	// 	return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
-	// }
+	command.Stderr = os.Stderr
+	out, err = command.Output()
+	if err != nil {
+		return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
+	}
 
 	// if certbot obtained certificate, find path to cert
 	certFile, keyFile, err = FindCertPath(hostName)
