@@ -4,7 +4,6 @@ import (
 	"crypto/tls"
 	"fmt"
 	"io/fs"
-	"os"
 	"strings"
 
 	"github.com/frederik-jatzkowski/hermes/params"
@@ -71,8 +70,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 		"--http-01-port",
 		"442",
 	)
-	command.Stderr = os.Stderr
-
+	out, err = command.Output()
 	if err != nil {
 		return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
 	}
