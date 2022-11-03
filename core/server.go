@@ -109,10 +109,6 @@ func (server *Server) Start() {
 }
 
 func (server *Server) monitor() {
-	var (
-		err error
-	)
-
 	// check forever until server is being stopped
 	for {
 		// if stopping, seize monitoring
