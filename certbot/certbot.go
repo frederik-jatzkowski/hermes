@@ -69,7 +69,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 		"--http-01-port",
 		"442",
 	)
-	out, err = command.Output()
+	_, err = command.Output()
 	// if err != nil {
 	// 	return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
 	// }
