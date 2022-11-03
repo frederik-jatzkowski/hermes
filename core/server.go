@@ -101,7 +101,12 @@ func (server *Server) closeCopy(src net.Conn, dst net.Conn) {
 }
 
 func (server *Server) Start() {
+	server.stopLock.Lock()
+	defer server.stopLock.Unlock()
+
 	logs.Info().Str(logs.Component, logs.Server).Str(logs.ServerAddress, server.address.String()).Msg("starting server")
+
+	server.stop = false
 
 	go server.monitor()
 
@@ -153,6 +158,7 @@ func (server *Server) Stop() {
 	// prevent further connections to be handled
 	server.stopLock.Lock()
 	server.stop = true
+	server.healthy = false
 
 	// close all existing connections
 	server.connsLock.Lock()
