@@ -38,6 +38,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	var (
 		cert tls.Certificate
 		err  error
+		out  []byte
 	)
 
 	if hostName == "" {
@@ -68,9 +69,9 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 		"--http-01-port",
 		"442",
 	)
-	_, err = command.Output()
+	out, err = command.Output()
 	if err != nil {
-		return cert, fmt.Errorf("certbot could not obtain new certificate: %s", err)
+		return cert, fmt.Errorf("certbot could not obtain new certificate (output: '%s'): %s", string(out), err)
 	}
 
 	// if certbot obtained certificate, find path to cert
