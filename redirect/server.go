@@ -53,7 +53,7 @@ func Start() {
 	go func() {
 		err := server.ListenAndServe()
 		if err != http.ErrServerClosed {
-			logs.Error().Str(logs.Component, logs.Redirect).Msg("error while starting redirect: %s", err)
+			logs.Error().Str(logs.Component, logs.Redirect).Msgf("error while starting redirect: %s", err)
 		}
 	}()
 }
