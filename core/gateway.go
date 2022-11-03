@@ -97,6 +97,10 @@ func (gateway *Gateway) listen() {
 		logs.Debug().Str(logs.Component, logs.Gateway).Int(logs.Port, gateway.address.Port).Msg("accepted connection")
 
 		tlsConn = conn.(*tls.Conn)
+
+		// do a handshake
+		tlsConn.Handshake()
+
 		service, exists = gateway.services[tlsConn.ConnectionState().ServerName]
 		if exists {
 			go service.Handle(&conn)

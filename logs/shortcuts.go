@@ -9,6 +9,7 @@ const (
 	Service       = "service"
 	Gateway       = "gateway"
 	Core          = "core"
+	Certbot       = "certbot"
 	Admin         = "admin"
 	Redirect      = "redirect"
 	Cmd           = "cmd"

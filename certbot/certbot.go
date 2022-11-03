@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"strings"
 
+	"github.com/frederik-jatzkowski/hermes/logs"
 	"github.com/frederik-jatzkowski/hermes/params"
 )
 
@@ -73,6 +74,8 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	if err != nil {
 		return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
 	}
+
+	logs.Info().Str(logs.Component, logs.Certbot).Msgf("successfully registered new certificate for '%s'", hostName)
 
 	// if certbot obtained certificate, find path to cert
 	certFile, keyFile, err = FindCertPath(hostName)
