@@ -70,9 +70,9 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 		"442",
 	)
 	out, err = command.Output()
-	if err != nil {
-		return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
-	}
+	// if err != nil {
+	// 	return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %+v", string(out), err)
+	// }
 
 	// if certbot obtained certificate, find path to cert
 	certFile, keyFile, err = FindCertPath(hostName)
