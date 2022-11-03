@@ -71,7 +71,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	)
 	out, err = command.Output()
 	if err != nil {
-		return cert, fmt.Errorf("certbot could not obtain new certificate: %s", string(out))
+		return cert, fmt.Errorf("certbot could not obtain new certificate (output: %s): %S", string(out), err)
 	}
 
 	// if certbot obtained certificate, find path to cert
