@@ -2,6 +2,7 @@
   import Button from "../util/Button.svelte";
   import { ERR, SUCCESS } from "../util/colors";
   import Group from "../util/Group.svelte";
+  import HeaderInput from "../util/HeaderInput.svelte";
   import Textfield from "../util/Textfield.svelte";
   import Service from "./Service.svelte";
   import type { ConfigType, GatewayType } from "./types";
@@ -15,7 +16,7 @@
   }
   function addService() {
     gateway.services.unshift({
-      hostName: "Enter the Domain of your Service",
+      hostName: "",
       balancer: {
         algorithm: "RoundRobin",
         servers: [],
@@ -26,7 +27,11 @@
 </script>
 
 <gateway>
-  <Textfield name="host" bind:value={gateway.address}>Local Gateway Address:</Textfield>
+  <HeaderInput
+    name="localAddress"
+    bind:value={gateway.address}
+    placeholder="Enter the gateway address here"
+  />
   <Group>
     <Button scheme={ERR} on:click={deleteGateway}>Delete Gateway</Button>
     <Button scheme={SUCCESS} on:click={addService}>Add Service</Button>

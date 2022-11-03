@@ -1,5 +1,4 @@
 <script lang="ts">
-  import Checkbox from "../util/Checkbox.svelte";
   import Group from "../util/Group.svelte";
   import type { ConfigType } from "./types";
   import Gateway from "./Gateway.svelte";
@@ -11,7 +10,7 @@
 
   function addGateway() {
     config.gateways.unshift({
-      address: "Where should this gateway listen?",
+      address: "",
       services: [],
     });
     config = config;
@@ -23,11 +22,6 @@
   {new Date(config.unix * 1000).toUTCString()}
 </Message>
 
-<Group>
-  <Checkbox bind:checked={config.redirect} name="redirect">
-    Redirect HTTP connections to HTTPS?
-  </Checkbox>
-</Group>
 <Group>
   <Button scheme={SUCCESS} on:click={addGateway}>Add Gateway</Button>
 </Group>

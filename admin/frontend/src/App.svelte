@@ -5,7 +5,7 @@
 </script>
 
 <main>
-  {#if !$authenticated}
+  {#if $authenticated}
     <Login />
   {:else}
     <ConfigPanel />

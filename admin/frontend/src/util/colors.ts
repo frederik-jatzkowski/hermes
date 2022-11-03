@@ -13,7 +13,7 @@ export const WARN: ColorScheme = {
 };
 export const INFO: ColorScheme = {
   color: "#eee",
-  bg: "#155258",
+  bg: "#4b5766",
 };
 export const SUCCESS: ColorScheme = {
   color: "#eee",

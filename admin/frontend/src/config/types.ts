@@ -3,7 +3,6 @@ export type ConfigHistoryType = ConfigType[];
 export type ConfigType = {
   unix: number;
   gateways: GatewayType[];
-  redirect: boolean;
 };
 
 export type GatewayType = {

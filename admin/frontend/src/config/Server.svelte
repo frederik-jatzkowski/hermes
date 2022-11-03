@@ -2,7 +2,7 @@
   import Button from "../util/Button.svelte";
   import { ERR } from "../util/colors";
   import Group from "../util/Group.svelte";
-  import Textfield from "../util/Textfield.svelte";
+  import HeaderInput from "../util/HeaderInput.svelte";
   import type { ServerType, ServiceType } from "./types";
 
   export let server: ServerType;
@@ -15,10 +15,12 @@
 </script>
 
 <service>
-  <Textfield name="host" bind:value={server.address}>Server Address:</Textfield>
-  <Group>
-    <Button scheme={ERR} on:click={deleteServer}>Delete Server</Button>
-  </Group>
+  <HeaderInput
+    name="remoteAddress"
+    bind:value={server.address}
+    placeholder="Enter the server address here"
+  />
+  <Button scheme={ERR} on:click={deleteServer}>Delete Server</Button>
 </service>
 
 <style>
