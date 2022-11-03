@@ -8,15 +8,12 @@ import (
 
 type Core struct {
 	gateways []*Gateway
-	redirect bool
 }
 
 func NewCore(config config.Config) *Core {
 	var (
 		core Core
 	)
-
-	core.redirect = config.Redirect
 
 	for _, gatewayConfig := range config.Gateways {
 		core.gateways = append(core.gateways, NewGateway(gatewayConfig))
@@ -30,6 +27,8 @@ func (core *Core) Start() error {
 
 	logs.Info().Str(logs.Component, logs.Core).Msg("starting core")
 
+	redirect.Start()
+
 	for _, gateway := range core.gateways {
 		err = gateway.Start()
 		if err != nil {
@@ -39,9 +38,6 @@ func (core *Core) Start() error {
 		}
 	}
 
-	if core.redirect {
-		redirect.Start()
-	}
 	logs.Info().Str(logs.Component, logs.Core).Msg("successfully started core")
 
 	return err
@@ -50,9 +46,7 @@ func (core *Core) Start() error {
 func (core *Core) Stop() {
 	logs.Info().Str(logs.Component, logs.Core).Msg("stopping core")
 
-	if core.redirect {
-		redirect.Stop()
-	}
+	redirect.Stop()
 
 	for _, gateway := range core.gateways {
 		gateway.Stop()

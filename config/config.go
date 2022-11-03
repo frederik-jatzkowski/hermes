@@ -8,7 +8,6 @@ import (
 type Config struct {
 	Unix     int64     `json:"unix"`
 	Gateways []Gateway `json:"gateways"`
-	Redirect bool      `json:"redirect"`
 }
 
 func NewConfig(data []byte) (Config, error) {
