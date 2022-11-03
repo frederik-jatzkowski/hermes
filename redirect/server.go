@@ -50,9 +50,12 @@ func Start() {
 		Handler: &redirect{},
 	}
 
-	go server.ListenAndServe()
-
-	logs.Info().Str(logs.Component, logs.Redirect).Msg("successfully started redirect")
+	go func() {
+		err := server.ListenAndServe()
+		if err != http.ErrServerClosed {
+			logs.Error().Str(logs.Component, logs.Redirect).Msg("error while starting redirect: %s", err)
+		}
+	}()
 }
 func Stop() {
 	logs.Info().Str(logs.Component, logs.Redirect).Msg("stopping redirect")
