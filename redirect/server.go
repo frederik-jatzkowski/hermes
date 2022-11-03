@@ -9,13 +9,11 @@ import (
 	"github.com/frederik-jatzkowski/hermes/logs"
 )
 
-type redirect struct {
-	enabled bool
-}
+type redirect struct{}
 
 func (r *redirect) ServeHTTP(response http.ResponseWriter, request *http.Request) {
 	// proxy requests for /.well-known/* to certbot on port 442
-	if strings.HasPrefix(request.URL.Path, "/.well-known") {
+	if strings.HasPrefix(request.URL.Path, "/.well-known") || strings.HasPrefix(request.URL.Path, ".well-known") {
 		proxyUrl, err := url.Parse("http://localhost:442")
 		if err != nil {
 			logs.Error().Str(logs.Component, logs.Redirect).Msgf("could not resolve url for proxy: %s", err)
