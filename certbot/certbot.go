@@ -38,7 +38,7 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	var (
 		cert tls.Certificate
 		err  error
-		out  []byte
+		// out  []byte
 	)
 
 	if hostName == "" {
