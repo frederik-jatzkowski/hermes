@@ -73,6 +73,11 @@ func (service *Service) reload() {
 	for {
 		select {
 		case <-ticker.C:
+			err = certbot.Renew()
+			if err != nil {
+				logs.Error().Str(logs.Component, logs.Service).Str(logs.HostName, service.hostName).
+					Err(err).Msg("could not renew certificate")
+			}
 			cert, err = certbot.ObtainCertificate(service.hostName)
 			if err != nil {
 				logs.Error().Str(logs.Component, logs.Service).Str(logs.HostName, service.hostName).

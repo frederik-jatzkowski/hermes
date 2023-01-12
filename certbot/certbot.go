@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/fs"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/frederik-jatzkowski/hermes/logs"
 	"github.com/frederik-jatzkowski/hermes/params"
@@ -90,4 +92,32 @@ func ObtainCertificate(hostName string) (tls.Certificate, error) {
 	}
 
 	return cert, nil
+}
+
+var lastRenewal time.Time
+var lastRenewalLock sync.Mutex
+
+func Renew() error {
+	lastRenewalLock.Lock()
+	defer lastRenewalLock.Unlock()
+	// if last renewal was only recently, skip renewal
+	if lastRenewal.Add(time.Hour * 12).After(time.Now()) {
+		return nil
+	}
+
+	command := execCommand(
+		"certbot",
+		"renew",
+		"--quiet",
+	)
+	out, err := command.Output()
+	if err != nil {
+		return fmt.Errorf("certbot could not renew certificates (output: %s): %+v", string(out), err)
+	}
+
+	lastRenewal = time.Now()
+
+	logs.Info().Str(logs.Component, logs.Certbot).Msgf("successfully renewed certificates")
+
+	return nil
 }
